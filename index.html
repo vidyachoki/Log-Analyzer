@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Log Analyzer — Konovo Production Support</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    /* Konovo Light Theme */
+    --bg: #f4f6fa;
+    --surface: #ffffff;
+    --surface2: #f0f3f8;
+    --border: #dde3ee;
+    --border2: #c8d2e4;
+    /* Konovo coral */
+    --accent: #e8534a;
+    --accent2: #1a2f5e;
+    --accent-dim: rgba(232,83,74,0.10);
+    --accent-glow: rgba(232,83,74,0.20);
+    /* Status */
+    --red: #e8534a;
+    --red-dim: rgba(232,83,74,0.10);
+    --orange: #f97316;
+    --orange-dim: rgba(249,115,22,0.10);
+    --yellow: #f59e0b;
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.10);
+    --blue: #2563eb;
+    --blue-dim: rgba(37,99,235,0.10);
+    --purple: #7c3aed;
+    --purple-dim: rgba(124,58,237,0.10);
+    /* Konovo navy */
+    --navy: #1a2f5e;
+    /* Text */
+    --text: #1a2035;
+    --text2: #5a6880;
+    --text3: #8fa0b8;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 8px rgba(26,47,94,0.08);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    height: 40px;
+    width: auto;
+    display: flex;
+    align-items: center;
+  }
+  .logo-icon img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .logo-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.01em;
+  }
+
+  .logo-text span {
+    color: var(--accent);
+  }
+
+  .header-badge {
+    background: var(--accent-dim);
+    border: 1px solid rgba(232,83,74,0.25);
+    color: var(--accent);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--mono);
+  }
+
+  /* HERO */
+  .hero {
+    border-bottom: 1px solid var(--border);
+    background: #ffffff;
+    padding: 28px 40px;
+  }
+
+  .hero-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+  }
+
+  .hero-left { flex: 1; }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 6px;
+    font-family: var(--mono);
+  }
+
+  .hero h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.2;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  .hero p {
+    color: var(--text2);
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 520px;
+  }
+
+  .hero-right { flex-shrink: 0; }
+
+  .hero-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .hsc-item {
+    padding: 12px 22px;
+    text-align: center;
+  }
+
+  .hsc-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy);
+    font-family: var(--mono);
+    line-height: 1;
+  }
+
+  .hsc-label {
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 3px;
+    white-space: nowrap;
+  }
+
+  .hsc-divider {
+    width: 1px;
+    height: 36px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 40px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  /* INPUT PANEL */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f7f9fc;
+  }
+
+  .panel-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-title .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  textarea {
+    width: 100%;
+    height: 320px;
+    background: #fafbfd;
+    border: none;
+    color: #2d4060;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    padding: 16px 18px;
+    resize: none;
+    outline: none;
+    line-height: 1.65;
+  }
+
+  textarea::placeholder {
+    color: var(--text2);
+    font-family: var(--mono);
+  }
+
+  .input-actions {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    font-family: var(--sans);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #e8534a, #c0392b);
+    color: #ffffff;
+    flex: 1;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(232,83,74,0.35);
+  }
+
+  .btn-secondary {
+    background: #f0f3f8;
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    color: var(--text);
+    border-color: var(--accent);
+    background: #e8edf7;
+  }
+
+  .btn-upload {
+    background: #fff5f5;
+    color: var(--accent);
+    border: 1px solid rgba(232,83,74,0.3);
+  }
+
+  /* RESULTS PANEL */
+  .results-panel {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .results-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 500px;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 320px;
+    color: var(--text2);
+    text-align: center;
+    gap: 12px;
+  }
+
+  .empty-icon {
+    font-size: 48px;
+    opacity: 0.3;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+  }
+
+  /* SUMMARY CARDS */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .summary-card {
+    background: #f7f9fc;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .summary-card .num {
+    font-size: 24px;
+    font-weight: 700;
+    font-family: var(--mono);
+  }
+
+  .summary-card .label {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+
+  .critical { color: var(--red); }
+  .warning { color: var(--orange); }
+  .info-color { color: var(--blue); }
+  .success { color: var(--green); }
+
+  /* ERROR ITEMS */
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title:first-of-type {
+    margin-top: 0;
+  }
+
+  .error-item {
+    background: #f8fafd;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--border);
+    transition: border-color 0.2s;
+  }
+
+  .error-item:hover {
+    border-left-color: var(--accent);
+  }
+
+  .error-item.critical { border-left-color: var(--red); }
+  .error-item.warning { border-left-color: var(--orange); }
+  .error-item.info { border-left-color: var(--blue); }
+
+  .error-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .error-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: var(--mono);
+    text-transform: uppercase;
+  }
+
+  .badge-critical { background: rgba(255,71,87,0.15); color: var(--red); }
+  .badge-warning { background: rgba(255,165,2,0.15); color: var(--orange); }
+  .badge-info { background: rgba(30,144,255,0.15); color: var(--blue); }
+
+  .error-time {
+    font-size: 11px;
+    color: var(--text2);
+    font-family: var(--mono);
+  }
+
+  .error-msg {
+    font-size: 13px;
+    color: var(--text);
+    font-family: var(--mono);
+    margin-bottom: 6px;
+    word-break: break-all;
+  }
+
+  .error-rca {
+    font-size: 12px;
+    color: var(--accent);
+    background: rgba(232,83,74,0.06);
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-top: 6px;
+  }
+
+  .error-rca span {
+    color: var(--text2);
+    font-weight: 600;
+  }
+
+  /* TIMELINE */
+  .timeline {
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: #f8fafd;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -17px;
+    top: 14px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+  }
+
+  .timeline-item.critical::before { background: var(--red); }
+  .timeline-item.warning::before { background: var(--orange); }
+
+  .timeline-time {
+    font-size: 11px;
+    color: var(--text2);
+    font-family: var(--mono);
+    margin-bottom: 4px;
+  }
+
+  .timeline-msg {
+    font-size: 12px;
+    color: var(--text);
+    font-family: var(--mono);
+  }
+
+  /* RCA SECTION */
+  .rca-box {
+    background: linear-gradient(135deg, rgba(232,83,74,0.04), rgba(26,47,94,0.04));
+    border: 1px solid rgba(232,83,74,0.18);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 8px;
+  }
+
+  .rca-box h4 {
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .rca-box p {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .rca-steps {
+    margin-top: 10px;
+    padding-left: 16px;
+  }
+
+  .rca-steps li {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 4px;
+    line-height: 1.5;
+  }
+
+  /* LOADING */
+  .loading {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 320px;
+    gap: 16px;
+  }
+
+  .loading.active {
+    display: flex;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading-text {
+    color: var(--text2);
+    font-size: 14px;
+    font-family: var(--mono);
+  }
+
+  /* FULL WIDTH BOTTOM SECTION */
+  .bottom-section {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 40px 40px;
+  }
+
+  /* SAMPLE LOGS */
+  .samples {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .sample-btn {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+
+  .sample-btn:hover {
+    border-color: var(--accent);
+    background: rgba(232,83,74,0.06);
+  }
+
+  .sample-type {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+
+  .sample-desc {
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 32px;
+    text-align: center;
+    color: var(--text3);
+    font-size: 12px;
+    background: #ffffff;
+  }
+
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .hero-inner { flex-direction: column; align-items: flex-start; }
+    .hero-right { display: none; }
+    .hero h1 { font-size: 22px; }
+    .samples { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* EXPORT BTN */
+  .export-btn {
+    background: #f0f3f8;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.2s;
+  }
+
+  .export-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  #fileInput { display: none; }
+
+  .char-count {
+    font-size: 11px;
+    color: var(--text2);
+    font-family: var(--mono);
+    margin-left: auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon"><img src="data:image/jpeg;base64,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" alt="Konovo"/></div>
+    <div class="logo-text"><span>Log</span> Analyzer</div>
+  </div>
+  <div class="header-badge">Production Support · Internal Tool</div>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Production Support · Log Intelligence</div>
+      <h1>Log Analyzer</h1>
+      <p>Upload or paste logs from Papertrail, AWS CloudWatch, or any application. Accepts any file format — .gz archives, plain text, JSONL, and more. Instantly detects errors, classifies severity, and provides actionable root cause analysis — all within the browser, nothing leaves your machine.</p>
+    </div>
+    <div class="hero-right">
+      <div class="hero-stat-card">
+        <div class="hsc-item">
+          <div class="hsc-num">Any</div>
+          <div class="hsc-label">File Format Accepted</div>
+        </div>
+        <div class="hsc-divider"></div>
+        <div class="hsc-item">
+          <div class="hsc-num">Auto</div>
+          <div class="hsc-label">Root Cause Detection</div>
+        </div>
+        <div class="hsc-divider"></div>
+        <div class="hsc-item">
+          <div class="hsc-num">0</div>
+          <div class="hsc-label">Data Sent to Server</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <!-- INPUT PANEL -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="dot"></div>
+        Log Input
+      </div>
+      <span class="char-count" id="charCount">0 lines</span>
+    </div>
+    <textarea id="logInput" placeholder="Paste your logs here — supports all formats:
+
+① Plain text:
+2024-01-15 10:23:45 ERROR Database connection timeout after 30s
+
+② Papertrail live view (copy-paste from browser):
+Jun 26 10:58:24 api-prod api ERROR WritePaypalPaymentInfo::error: 95286
+
+③ Papertrail archive (.gz upload — JSON lines):
+{&quot;logmsg&quot;:&quot;ERROR HikariPool timeout&quot;,&quot;source_name&quot;:&quot;api-prod&quot;,...}
+
+Supports file upload: any format (.gz, .log, .txt, .json, .jsonl, and more)"></textarea>
+    <div class="input-actions">
+      <button class="btn btn-upload" onclick="document.getElementById('fileInput').click()">📁 Upload Any Log File</button>
+      <input type="file" id="fileInput" accept="*" onchange="loadFile(event)"/>
+      <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+      <button class="btn btn-primary" onclick="analyzeLogs()">🔍 Analyze Logs</button>
+    </div>
+  </div>
+
+  <!-- RESULTS PANEL -->
+  <div class="results-panel panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="dot"></div>
+        Analysis Results
+      </div>
+      <button class="export-btn" onclick="exportReport()" id="exportBtn" style="display:none">📄 Export Report</button>
+    </div>
+    <div class="results-body" id="resultsBody">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📋</div>
+        <p>Paste your logs on the left<br/>and click <strong>Analyze Logs</strong></p>
+      </div>
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Analyzing logs...</div>
+      </div>
+      <div id="results" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SAMPLE LOGS SECTION -->
+<div class="bottom-section">
+  <div class="section-title" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:10px;">Quick Start — Sample Logs</div>
+  <div class="samples">
+    <div class="sample-btn" onclick="loadSample('database')">
+      <div class="sample-type" style="color: var(--red)">🗄️ Database Error</div>
+      <div class="sample-desc">Connection timeouts, query failures, deadlocks</div>
+    </div>
+    <div class="sample-btn" onclick="loadSample('aws')">
+      <div class="sample-type" style="color: var(--orange)">☁️ AWS CloudWatch</div>
+      <div class="sample-desc">Lambda timeouts, S3 access errors, ECS failures</div>
+    </div>
+    <div class="sample-btn" onclick="loadSample('api')">
+      <div class="sample-type" style="color: var(--blue)">🔌 API / Application</div>
+      <div class="sample-desc">HTTP 500 errors, authentication failures, timeouts</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Production Support Team - Vidya
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<script>
+const SAMPLE_LOGS = {
+  database: `2024-03-15 08:12:33 INFO  Application started successfully on port 8080
+2024-03-15 08:14:21 INFO  User login: user_id=4821 ip=192.168.1.45
+2024-03-15 08:15:02 WARN  Slow query detected: SELECT * FROM orders WHERE user_id=4821 took 4823ms
+2024-03-15 08:15:10 ERROR Database connection pool exhausted - max connections: 100
+2024-03-15 08:15:11 ERROR Failed to acquire connection after 30000ms timeout
+2024-03-15 08:15:12 CRITICAL com.mysql.jdbc.exceptions.jdbc4.CommunicationsException: Connection refused
+2024-03-15 08:15:13 ERROR Transaction rolled back: java.sql.SQLException: Deadlock found
+2024-03-15 08:15:15 WARN  Retry attempt 1/3 for DB connection
+2024-03-15 08:15:18 WARN  Retry attempt 2/3 for DB connection  
+2024-03-15 08:15:22 CRITICAL Retry attempt 3/3 failed - Database unreachable
+2024-03-15 08:15:23 ERROR NullPointerException: Cannot invoke method on null object at UserRepository.java:89
+2024-03-15 08:15:25 CRITICAL Service degraded - falling back to cache
+2024-03-15 08:16:01 WARN  Cache hit ratio dropped to 23% - possible cache invalidation
+2024-03-15 08:16:45 INFO  DBA alerted - ticket created PSH-4421
+2024-03-15 08:18:00 INFO  DB connection restored - failover to replica successful`,
+
+  aws: `2024-03-15 09:00:01 INFO  Lambda function survey-processor invoked: RequestId=abc-123
+2024-03-15 09:00:02 INFO  Processing batch of 450 survey responses
+2024-03-15 09:00:15 WARN  Lambda memory usage: 487MB / 512MB (95%)
+2024-03-15 09:00:29 ERROR Task timed out after 30.00 seconds RequestId=abc-123
+2024-03-15 09:00:29 CRITICAL Lambda TIMEOUT - survey-processor function exceeded limit
+2024-03-15 09:01:00 INFO  Lambda function survey-processor invoked: RequestId=def-456
+2024-03-15 09:01:12 ERROR S3 Access Denied: s3://prod-survey-bucket/exports/march-2024/
+2024-03-15 09:01:12 ERROR NoSuchBucketException: The specified bucket does not exist
+2024-03-15 09:01:13 CRITICAL ECS task stopped unexpectedly: exit code 137 (OOM Killed)
+2024-03-15 09:01:14 ERROR Container survey-api crashed - OOMKilled: true
+2024-03-15 09:01:20 WARN  CloudWatch alarm triggered: CPUUtilization > 90% for 5 minutes
+2024-03-15 09:01:25 WARN  Auto Scaling: launching new ECS task in us-east-1a
+2024-03-15 09:02:00 ERROR WAF rule blocked request: Rate limit exceeded from IP 203.45.67.89
+2024-03-15 09:02:15 CRITICAL DynamoDB ProvisionedThroughputExceededException on table survey_responses
+2024-03-15 09:03:00 INFO  New ECS task healthy - traffic routing resumed`,
+
+  api: `2024-03-15 10:30:00 INFO  POST /api/v2/surveys/submit - user_id=9921 survey_id=S-4401
+2024-03-15 10:30:01 WARN  Slow response: /api/v2/surveys/submit took 8432ms (threshold: 3000ms)
+2024-03-15 10:30:02 ERROR HTTP 500 Internal Server Error: /api/v2/payment/process
+2024-03-15 10:30:02 ERROR PaymentGatewayException: Connection refused to payment provider
+2024-03-15 10:30:03 CRITICAL HTTP 503 Service Unavailable: /api/v2/auth/login
+2024-03-15 10:30:04 ERROR JWT token validation failed: Token expired at 2024-03-15T10:25:00Z
+2024-03-15 10:30:05 ERROR HTTP 401 Unauthorized: Invalid or expired authentication token
+2024-03-15 10:30:10 WARN  Rate limit approaching: 850/1000 requests per minute
+2024-03-15 10:30:15 CRITICAL HTTP 429 Too Many Requests: Rate limit exceeded
+2024-03-15 10:30:20 ERROR Redis cache connection failed: ECONNREFUSED 127.0.0.1:6379
+2024-03-15 10:30:21 ERROR Falling back to database - cache unavailable
+2024-03-15 10:30:25 WARN  Database response time degraded: avg 4200ms (normal: 200ms)
+2024-03-15 10:30:30 CRITICAL Cascading failure detected - multiple services impacted
+2024-03-15 10:30:35 ERROR Health check failed: /api/health returning 500
+2024-03-15 10:30:40 INFO  PagerDuty alert triggered - on-call engineer notified`
+};
+
+const RCA_MAP = {
+  'connection refused':    { rca: 'Service or database is down or port is blocked. Check if the target service is running and firewall rules allow the connection.', steps: ['Verify service status', 'Check port accessibility (telnet/netstat)', 'Review firewall/security group rules', 'Check service logs for crash reason'] },
+  // Fix 2: HikariPool / DB connection pool exhaustion — must come BEFORE generic 'timeout' and 'connection pool'
+  'hikaripool':            { rca: 'Database connection pool exhausted. HikariPool cannot acquire a DB connection within the timeout. Usually caused by slow queries holding connections or pool size too small.', steps: ['Check HikariPool max-pool-size config', 'Look for slow/long-running DB queries', 'Check if DB is under high load', 'Review connection leak in code — connections not being closed', 'Consider increasing pool size or query timeout'] },
+  'connection is not available': { rca: 'Database connection pool exhausted — no connections available within timeout. HikariPool or similar pool is saturated.', steps: ['Check connection pool size settings', 'Look for slow queries holding connections open', 'Check DB server load and active connections', 'Review code for connection leaks'] },
+  'timeout':               { rca: 'Service took too long to respond. Could be high load, slow query, or network latency.', steps: ['Check CPU/Memory usage on target server', 'Look for slow queries in DB', 'Verify network latency', 'Check thread pool exhaustion'] },
+  'nullpointerexception':  { rca: 'Code tried to use an object that was null. Usually a missing null check or unexpected empty data.', steps: ['Check the stack trace for exact line', 'Verify data being passed to the method', 'Check if DB returned empty result', 'Add null validation in code'] },
+  'outofmemory':           { rca: 'Application ran out of heap memory. Memory leak or load spike.', steps: ['Check JVM heap settings (-Xmx)', 'Look for memory leak in code', 'Analyze heap dump', 'Review recent deployments for memory-heavy changes'] },
+  'deadlock':              { rca: 'Two DB transactions waiting on each other causing a lock. Usually from concurrent updates to the same rows.', steps: ['Identify tables involved in deadlock', 'Review transaction order in code', 'Add proper indexing', 'Consider optimistic locking strategy'] },
+  'connection pool':       { rca: 'All database connections are in use. Application cannot get a new connection.', steps: ['Check max_connections setting', 'Look for connection leaks in code', 'Review slow queries holding connections', 'Increase pool size if needed'] },
+  'oom':                   { rca: 'Container killed by OS due to out-of-memory. Memory limit too low or memory leak.', steps: ['Check container memory limits', 'Review recent code changes', 'Analyze memory usage patterns', 'Consider increasing memory allocation'] },
+  // Fix 3: S3 check — use longer phrase to avoid matching PayPal transaction IDs like "AP-S3MUAYGSUGYIGN30"
+  's3 access':             { rca: 'S3 bucket access issue. Could be wrong bucket name, missing permissions, or bucket deleted.', steps: ['Verify bucket name and region', 'Check IAM role permissions', 'Confirm bucket exists', 'Review S3 bucket policy'] },
+  's3://':                 { rca: 'S3 bucket access issue. Could be wrong bucket name, missing permissions, or bucket deleted.', steps: ['Verify bucket name and region', 'Check IAM role permissions', 'Confirm bucket exists', 'Review S3 bucket policy'] },
+  'nosuchbucket':          { rca: 'S3 bucket does not exist. Wrong bucket name or bucket was deleted.', steps: ['Verify bucket name and region', 'Check IAM role permissions', 'Confirm bucket exists', 'Review S3 bucket policy'] },
+  'lambda':                { rca: 'AWS Lambda function failed. Could be timeout, memory, or code error.', steps: ['Check function timeout setting', 'Review memory allocation', 'Check CloudWatch logs for function', 'Verify trigger configuration'] },
+  '401':                   { rca: 'Authentication failed. Token is missing, expired, or invalid.', steps: ['Verify token expiry time', 'Check token generation logic', 'Confirm auth service is running', 'Review recent auth changes'] },
+  '500':                   { rca: 'Server-side error. Application threw an unhandled exception.', steps: ['Check application error logs', 'Identify exact exception in stack trace', 'Review recent deployments', 'Check dependent service health'] },
+  '503':                   { rca: 'Service temporarily unavailable. Could be overloaded or down.', steps: ['Check service health status', 'Review CPU/memory usage', 'Check load balancer configuration', 'Verify auto-scaling is working'] },
+  '429':                   { rca: 'Rate limit exceeded. Too many requests in a short time.', steps: ['Identify source of high traffic', 'Check for bot traffic or abuse', 'Review rate limit thresholds', 'Implement exponential backoff'] },
+  'redis':                 { rca: 'Redis cache server is unreachable. Could be down or wrong config.', steps: ['Verify Redis service is running', 'Check connection string and port', 'Review Redis memory usage', 'Check network connectivity to Redis'] },
+  'jwt':                   { rca: 'JWT token is expired or invalid. Session management issue.', steps: ['Check token expiry time configuration', 'Verify server time synchronization', 'Review token refresh logic', 'Check if secret key changed'] },
+  'dynamodb':              { rca: 'DynamoDB throughput exceeded. Read/write capacity units exhausted.', steps: ['Check current RCU/WCU usage', 'Enable auto-scaling on table', 'Review query patterns for optimization', 'Consider on-demand capacity mode'] },
+  'waf':                   { rca: 'WAF blocked the request. Could be rate limiting, IP blocking, or rule match.', steps: ['Check WAF logs for rule triggered', 'Verify if IP is legitimately blocked', 'Review WAF rule configuration', 'Whitelist IP if needed'] },
+  'cache':                 { rca: 'Cache service unavailable causing database fallback and performance degradation.', steps: ['Check cache service health', 'Review cache eviction policies', 'Monitor DB load increase', 'Restart cache service if needed'] },
+  'slow query':            { rca: 'Database query is taking too long. Missing index or large data scan.', steps: ['Run EXPLAIN on the slow query', 'Check for missing indexes', 'Review query for full table scans', 'Consider query optimization or indexing'] },
+  'payment':               { rca: 'Payment gateway connection failed. Could be provider outage or wrong config.', steps: ['Check payment provider status page', 'Verify API credentials', 'Check network connectivity to gateway', 'Review recent credential changes'] }
+};
+
+// Papertrail plain-text prefix: "Jun 26 10:58:24 api-prod api ERROR ..."
+// Returns { text, host, isoTime, ptTime } where text = the message part only
+function extractLogText(line) {
+  const trimmed = line.trim();
+
+  // 1. JSON / JSONL format (Papertrail archive .gz)
+  if (trimmed.startsWith('{')) {
+    try {
+      const obj = JSON.parse(trimmed);
+      const msg  = obj.logmsg || obj.message || obj.msg || '';
+      const host = obj.source_name || obj['sw.log_source.host'] || obj.host || '';
+      const time = obj.receive_time || obj.timestamp || obj.time || '';
+      return { text: msg, host, isoTime: String(time), ptTime: '' };
+    } catch(e) { /* fall through */ }
+  }
+
+  // 2. Papertrail plain-text format: "Jun 26 10:58:24 api-prod api LEVEL message"
+  //    Month Day HH:MM:SS hostname appname [level] message
+  const ptMatch = trimmed.match(
+    /^((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})\s+(\S+)\s+\S+\s+(.*)/
+  );
+  if (ptMatch) {
+    return { text: ptMatch[3], host: ptMatch[2], isoTime: '', ptTime: ptMatch[1] };
+  }
+
+  // 3. Plain text logs (standard format)
+  return { text: trimmed, host: '', isoTime: '', ptTime: '' };
+}
+
+function detectSeverity(line) {
+  const { text } = extractLogText(line);
+
+  // Extract the actual log level from the prefix (e.g. "INFO", "DEBUG", "WARN", "ERROR")
+  // Papertrail/Spring Boot format: "INFO  message..." or "ERROR message..." or "WARN  message..."
+  // We only trust the DECLARED log level, not keywords found anywhere in the message body.
+  const trimmed = text.trim();
+
+  // Detect declared log level from the start of the message
+  const levelMatch = trimmed.match(/^(TRACE|DEBUG|INFO|WARN(?:ING)?|ERROR|CRITICAL|FATAL|EMERGENCY)\s+/i);
+  const declaredLevel = levelMatch ? levelMatch[1].toUpperCase() : null;
+
+  // If a log level prefix is present, use ONLY that — don't scan the body
+  if (declaredLevel) {
+    if (declaredLevel === 'CRITICAL' || declaredLevel === 'FATAL' || declaredLevel === 'EMERGENCY') return 'critical';
+    if (declaredLevel === 'ERROR') return 'warning';
+    if (declaredLevel === 'WARN' || declaredLevel === 'WARNING') return 'info';
+    // INFO/DEBUG/TRACE: do NOT scan body for keywords (avoids false positives like
+    // "INFO An error occurred..." or "INFO CheckValidation errors for surveyId...")
+    return null;
+  }
+
+  // No declared level prefix — fall back to keyword scanning
+  // but protect against false positives from JSON data buried in the line
+  const isBuriedInData = trimmed.startsWith('{') ||
+                         trimmed.startsWith('"') ||
+                         trimmed.startsWith('null,') ||
+                         trimmed.startsWith('...') ||
+                         trimmed.startsWith('[{') ||
+                         /^\d+,"/.test(trimmed) ||
+                         /^[a-z_]+"/.test(trimmed) ||
+                         /^[^A-Z\[\{]*"[a-zA-Z]/.test(trimmed.substring(0, 15));
+
+  const l = trimmed.toUpperCase();
+  if (!isBuriedInData) {
+    if (/\bCRITICAL\b/.test(l) || /\bFATAL\b/.test(l) || /\bEMERGENCY\b/.test(l)) return 'critical';
+  }
+  if (l.includes('ERROR')) return 'warning';
+  if (l.includes('WARN') || l.includes('WARNING')) return 'info';
+  return null;
+}
+
+function extractTime(line) {
+  const { isoTime, ptTime, text } = extractLogText(line);
+  // JSON: use ISO receive_time field e.g. "2026-06-26T11:00:00Z"
+  if (isoTime) return isoTime.replace('T', ' ').replace('Z', '').substring(0, 19);
+  // Papertrail plain-text: "Jun 26 10:58:24"
+  if (ptTime) return ptTime;
+  // Standard plain text: "2024-01-15 10:23:45" or "2024-01-15T10:23:45"
+  const m = text.match(/\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}/);
+  return m ? m[0].replace('T', ' ') : '';
+}
+
+function getRCA(line) {
+  const { text } = extractLogText(line);
+  const l = text.toLowerCase();
+
+  // HTTP status codes must match as standalone numbers, NOT inside longer numbers.
+  // e.g. '500' should NOT match '5000ms'. Word-boundary regex prevents this.
+  const numericCodeKeys = new Set(['401', '429', '500', '503']);
+
+  for (const [key, val] of Object.entries(RCA_MAP)) {
+    if (numericCodeKeys.has(key)) {
+      if (new RegExp('(?<![0-9])' + key + '(?![0-9])').test(l)) return val;
+    } else {
+      if (l.includes(key)) return val;
+    }
+  }
+  return null;
+}
+
+// Format a log line for display: "[host] message" for structured logs, raw for plain text
+function formatDisplayLine(line) {
+  const { text, host } = extractLogText(line);
+  return host ? `[${host}] ${text}` : text;
+}
+
+function analyzeLogs() {
+  // If lines were loaded from a .gz file directly, use those
+  const lines = _rawLines.length > 0
+    ? _rawLines
+    : document.getElementById('logInput').value.split('\n').filter(l => l.trim());
+
+  if (!lines.length) {
+    alert('Please paste some logs or upload a file first!');
+    return;
+  }
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('exportBtn').style.display = 'none';
+  document.getElementById('loadingText').textContent = 'Analysing ' + lines.length.toLocaleString() + ' lines…';
+
+  _analyzeLines(lines);
+}
+
+// Core analysis — chunked so the browser never blocks for more than ~50ms
+function _analyzeLines(lines) {
+  const errors = { critical: [], warning: [], info: [] };
+  const timeline = [];
+  const rcaSet = new Map();
+  const CHUNK = 5000;  // lines per chunk — tuned for ~30ms per tick
+  let i = 0;
+
+  function processChunk() {
+    const end = Math.min(i + CHUNK, lines.length);
+    for (; i < end; i++) {
+      const line = lines[i];
+      const sev = detectSeverity(line);
+      if (!sev) continue;
+
+      const time = extractTime(line);
+      const rca = getRCA(line);
+      const display = formatDisplayLine(line);
+      const obj = { line: display, time, rca };
+
+      errors[sev].push(obj);
+      timeline.push({ line: display, time, sev });
+
+      if (rca) {
+        const key = display.toLowerCase().substring(0, 60);
+        if (!rcaSet.has(key)) rcaSet.set(key, { line: display, rca, sev });
+      }
+    }
+
+    if (i < lines.length) {
+      // Update progress text and yield to browser
+      const pct = Math.round((i / lines.length) * 100);
+      document.getElementById('loadingText').textContent = `Analysing… ${pct}% (${i.toLocaleString()} / ${lines.length.toLocaleString()} lines)`;
+      setTimeout(processChunk, 0);
+    } else {
+      // All done — render results
+      _renderResults(errors, timeline, rcaSet, lines.length);
+    }
+  }
+
+  // Kick off first chunk after a frame so the loading spinner renders
+  setTimeout(processChunk, 50);
+}
+
+function _renderResults(errors, timeline, rcaSet, totalLines) {
+  const total = errors.critical.length + errors.warning.length + errors.info.length;
+  const healthy = totalLines - total;
+
+  let html = '';
+
+  // Summary cards
+  html += `<div class="summary-grid">
+    <div class="summary-card"><div class="num critical">${errors.critical.length}</div><div class="label">Critical</div></div>
+    <div class="summary-card"><div class="num warning">${errors.warning.length}</div><div class="label">Errors</div></div>
+    <div class="summary-card"><div class="num info-color">${errors.info.length}</div><div class="label">Warnings</div></div>
+    <div class="summary-card"><div class="num success">${healthy.toLocaleString()}</div><div class="label">Normal Lines</div></div>
+  </div>`;
+
+  // RCA Section
+  if (rcaSet.size > 0) {
+    html += `<div class="section-title">🧠 Root Cause Analysis</div>`;
+    rcaSet.forEach(({ line, rca }) => {
+      const shortLine = line.length > 80 ? line.substring(0, 80) + '...' : line;
+      html += `<div class="rca-box">
+        <h4>🔍 ${escHtml(shortLine)}</h4>
+        <p>${rca.rca}</p>
+        <ul class="rca-steps">
+          ${rca.steps.map(s => `<li>→ ${escHtml(s)}</li>`).join('')}
+        </ul>
+      </div>`;
+    });
+  }
+
+  // Critical errors
+  if (errors.critical.length > 0) {
+    html += `<div class="section-title">🔴 Critical Issues (${errors.critical.length})</div>`;
+    errors.critical.forEach(({ line, time, rca }) => {
+      html += `<div class="error-item critical">
+        <div class="error-header">
+          <span class="error-badge critical-badge">CRITICAL</span>
+          <span class="error-time">${time}</span>
+        </div>
+        <div class="error-msg">${escHtml(line)}</div>
+        ${rca ? `<div class="error-rca"><span class="rca-label">RCA:</span> ${rca.rca}</div>` : ''}
+      </div>`;
+    });
+  }
+
+  // Errors — cap display at 500 for very large files to keep render fast
+  if (errors.warning.length > 0) {
+    const displayErrors = errors.warning.slice(0, 500);
+    const hiddenCount = errors.warning.length - displayErrors.length;
+    html += `<div class="section-title">🟠 Errors (${errors.warning.length}${hiddenCount > 0 ? `, showing first 500` : ''})</div>`;
+    displayErrors.forEach(({ line, time, rca }) => {
+      html += `<div class="error-item warning">
+        <div class="error-header">
+          <span class="error-badge warning-badge">ERROR</span>
+          <span class="error-time">${time}</span>
+        </div>
+        <div class="error-msg">${escHtml(line)}</div>
+        ${rca ? `<div class="error-rca"><span class="rca-label">RCA:</span> ${rca.rca}</div>` : ''}
+      </div>`;
+    });
+    if (hiddenCount > 0) {
+      html += `<div class="error-item" style="text-align:center;color:var(--text2);font-size:12px;padding:12px">+ ${hiddenCount.toLocaleString()} more errors — export the report to see all</div>`;
+    }
+  }
+
+  // Warnings — cap at 200
+  if (errors.info.length > 0) {
+    const displayWarns = errors.info.slice(0, 200);
+    const hiddenWarn = errors.info.length - displayWarns.length;
+    html += `<div class="section-title">🔵 Warnings (${errors.info.length}${hiddenWarn > 0 ? `, showing first 200` : ''})</div>`;
+    displayWarns.forEach(({ line, time }) => {
+      html += `<div class="error-item info">
+        <div class="error-header">
+          <span class="error-badge info-badge">WARN</span>
+          <span class="error-time">${time}</span>
+        </div>
+        <div class="error-msg">${escHtml(line)}</div>
+      </div>`;
+    });
+  }
+
+  // Timeline — first 20
+  if (timeline.length > 0) {
+    html += `<div class="section-title">⏱️ ERROR TIMELINE</div>`;
+    timeline.slice(0, 20).forEach(({ line, time, sev }) => {
+      const shortLine = line.length > 100 ? line.substring(0, 100) + '...' : line;
+      html += `<div class="timeline-item ${sev}">
+        <div class="timeline-time">${time}</div>
+        <div class="timeline-msg">${escHtml(shortLine)}</div>
+      </div>`;
+    });
+  }
+
+  if (total === 0) {
+    html = `<div class="empty-state">
+      <div style="font-size:48px">✅</div>
+      <p><strong>No errors detected!</strong><br>All ${totalLines.toLocaleString()} log lines look healthy.</p>
+    </div>`;
+  }
+
+  document.getElementById('loading').classList.remove('active');
+  document.getElementById('results').innerHTML = html;
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('exportBtn').style.display = 'block';
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function clearAll() {
+  document.getElementById('logInput').value = '';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('exportBtn').style.display = 'none';
+  document.getElementById('charCount').textContent = '0 lines';
+  document.getElementById('fileInput').value = ''; // reset file input so same file can be re-uploaded
+  _rawLines = [];
+}
+
+function loadSample(type) {
+  _rawLines = [];
+  document.getElementById('logInput').value = SAMPLE_LOGS[type];
+  updateCount();
+  analyzeLogs();
+}
+
+// ─── FILE LOADING — optimised for large .gz files ───────────────────────────
+// For .gz: decompress via streaming chunks using pako.Inflate (not inflate()),
+// skip populating the textarea (which freezes for 288K lines), and pipe
+// directly into analyzeLines() in async batches so the browser stays alive.
+
+let _rawLines = [];   // holds lines when loaded from gz (bypassing textarea)
+
+function loadFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Always read as ArrayBuffer so we can:
+  // 1. Check magic bytes to auto-detect gzip (works even if .gz is renamed to .log or .txt)
+  // 2. Use TextDecoder for any text-based format (UTF-8, UTF-16, Latin-1, etc.)
+  const reader = new FileReader();
+  reader.onload = e => {
+    const bytes = new Uint8Array(e.target.result);
+
+    // Check gzip magic bytes: 0x1F 0x8B — works for ANY filename/extension
+    const isGzip = bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b;
+
+    if (isGzip) {
+      _processGzBytes(bytes);
+    } else {
+      // Decode as text — TextDecoder handles UTF-8, Latin-1, and most log encodings
+      try {
+        const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+        document.getElementById('logInput').value = text;
+        _rawLines = [];
+        updateCount();
+      } catch(err) {
+        alert('Could not read file: ' + err.message);
+      }
+    }
+  };
+  reader.onerror = () => alert('Failed to read file.');
+  reader.readAsArrayBuffer(file);
+}
+
+// Separated from _loadGzFast so it can be called with already-read bytes
+function _processGzBytes(bytes) {
+  _loadGzFast(null, bytes);
+}
+
+function _loadGzFast(file, preReadBytes) {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('exportBtn').style.display = 'none';
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('loadingText').textContent = 'Decompressing compressed log file...';
+
+  // Bytes already available from loadFile() universal reader — use directly.
+  // This means gzip works for ANY filename/extension, not just .gz
+  if (preReadBytes) {
+    _inflateBytes(preReadBytes);
+    return;
+  }
+
+  // Fallback: read File object directly (safety net)
+  const reader = new FileReader();
+  reader.onload = e => _inflateBytes(new Uint8Array(e.target.result));
+  reader.readAsArrayBuffer(file);
+}
+
+function _inflateBytes(data) {
+  try {
+    const inflater = new pako.Inflate({ to: 'string' });
+    const CHUNK = 256 * 1024;
+    let offset = 0;
+
+    function processChunk() {
+      const end = Math.min(offset + CHUNK, data.length);
+      const isLast = end >= data.length;
+      inflater.push(data.subarray(offset, end), isLast);
+      offset = end;
+
+      if (!isLast) {
+        setTimeout(processChunk, 0);
+      } else {
+        if (inflater.err) {
+          document.getElementById('loading').classList.remove('active');
+          document.getElementById('emptyState').style.display = 'flex';
+          alert('Failed to decompress: ' + inflater.msg);
+          return;
+        }
+        const text = inflater.result;
+        _rawLines = text.split('\n').filter(l => l.trim());
+        document.getElementById('charCount').textContent = _rawLines.length.toLocaleString() + ' lines (gz)';
+        const preview = _rawLines.slice(0, 30).join('\n') + (
+          _rawLines.length > 30
+            ? `\n\n... and ${(_rawLines.length - 30).toLocaleString()} more lines loaded in memory`
+            : ''
+        );
+        document.getElementById('logInput').value = preview;
+        document.getElementById('loadingText').textContent = 'Analysing ' + _rawLines.length.toLocaleString() + ' lines…';
+        _analyzeLines(_rawLines);
+      }
+    }
+    processChunk();
+  } catch(err) {
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('emptyState').style.display = 'flex';
+    alert('Decompression error: ' + err.message);
+  }
+}
+
+function updateCount() {
+  const lines = document.getElementById('logInput').value.split('\n').filter(l => l.trim()).length;
+  document.getElementById('charCount').textContent = lines + ' lines';
+}
+
+function exportReport() {
+  const results = document.getElementById('results').innerText;
+  const blob = new Blob([`AI LOG ANALYZER REPORT\nGenerated: ${new Date().toLocaleString()}\n\n${results}`], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `log-analysis-${Date.now()}.txt`;
+  a.click();
+}
+
+document.getElementById('logInput').addEventListener('input', updateCount);
+</script>
+</body>
+</html>
